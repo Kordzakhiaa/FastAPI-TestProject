@@ -62,10 +62,23 @@ def get_blog(id: int, db: Session = Depends(get_db)):
 def delete_blog(id: int, db: Session = Depends(get_db)):
     """ View which ensures the deletion of a specific blog """
 
-    blog = db.query(models.Blog).filter(models.Blog.id == id).delete(synchronize_session=False)
-    if blog < 1:
+    blog = db.query(models.Blog).filter(models.Blog.id == id)
+    if not blog.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f'Blog with the id {id} not found and cannot be deleted')
+    blog.delete(synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.put('/blog/update/{id}', status_code=status.HTTP_202_ACCEPTED)
+def update_blog(id: int, request: schemas.Blog, db: Session = Depends(get_db)):
+    blog = db.query(models.Blog).filter(models.Blog.id == id)
+    if not blog.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'Blog with the id {id} not found and cannot be updated')
+    blog.update(request.dict())
+    db.commit()
+
+    return {'updated_blog': request}
