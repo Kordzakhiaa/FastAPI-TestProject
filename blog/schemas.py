@@ -1,14 +1,14 @@
+from typing import List
+
 from pydantic import BaseModel, EmailStr
 
 
-class Blog(BaseModel):
+class BaseBlog(BaseModel):
     title: str
     body: str
 
 
-class ShowBlog(Blog):
-    """ Schema that inherits Blog and shows title and body in view (response_model) """
-
+class Blog(BaseBlog):
     class Config:
         orm_mode = True
 
@@ -22,6 +22,16 @@ class User(BaseModel):
 class ShowUser(BaseModel):
     username: str
     email: EmailStr
+    blogs: List[Blog] = []
+
+    class Config:
+        orm_mode = True
+
+
+class ShowBlog(BaseModel):
+    title: str
+    body: str
+    creator: ShowUser
 
     class Config:
         orm_mode = True

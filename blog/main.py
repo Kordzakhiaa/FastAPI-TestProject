@@ -31,19 +31,19 @@ def index():
     return {'message': 'index page'}
 
 
-@app.post('blog/create/', status_code=status.HTTP_201_CREATED)
+@app.post('/blog/create/', status_code=status.HTTP_201_CREATED, tags=['Blog'])
 def create_blog(request: schemas.Blog, db: Session = Depends(get_db)):
     """ View that creates blog """
 
-    new_blog = models.Blog(title=request.title, body=request.body)
+    new_blog = models.Blog(title=request.title, body=request.body, user_id=1)
     db.add(new_blog)
     db.commit()
     db.refresh(new_blog)
 
-    return {'data': {'new_blog': new_blog}}
+    return {'new_blog': new_blog}
 
 
-@app.get('blog/list/', status_code=status.HTTP_200_OK)
+@app.get('/blog/list/', status_code=status.HTTP_200_OK, tags=['Blog'])
 def blogs(db: Session = Depends(get_db)):
     """ View that lists all blogs """
 
@@ -51,7 +51,7 @@ def blogs(db: Session = Depends(get_db)):
     return {'all_blogs': all_blogs}
 
 
-@app.get('/blog/{id}/', status_code=status.HTTP_200_OK, response_model=schemas.ShowBlog)
+@app.get('/blog/{id}/', status_code=status.HTTP_200_OK, response_model=schemas.ShowBlog, tags=['Blog'])
 def get_blog(id: int, db: Session = Depends(get_db)):
     """ View where you can get specific blog by id """
 
@@ -59,10 +59,10 @@ def get_blog(id: int, db: Session = Depends(get_db)):
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f'Blog with the id {id} not found')
-    return {'blog': blog}
+    return blog
 
 
-@app.delete('/blog/delete/{id}/', status_code=status.HTTP_204_NO_CONTENT)
+@app.delete('/blog/delete/{id}/', status_code=status.HTTP_204_NO_CONTENT, tags=['Blog'])
 def delete_blog(id: int, db: Session = Depends(get_db)):
     """ View which ensures the deletion of a specific blog """
 
@@ -76,7 +76,7 @@ def delete_blog(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.put('/blog/update/{id}/', status_code=status.HTTP_202_ACCEPTED)
+@app.put('/blog/update/{id}/', status_code=status.HTTP_202_ACCEPTED, tags=['Blog'])
 def update_blog(id: int, request: schemas.Blog, db: Session = Depends(get_db)):
     """ View which provides update of a specific blog """
 
@@ -90,7 +90,7 @@ def update_blog(id: int, request: schemas.Blog, db: Session = Depends(get_db)):
     return {'updated_blog': request}
 
 
-@app.post('/user/register/', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowUser)
+@app.post('/user/register/', status_code=status.HTTP_201_CREATED, response_model=schemas.ShowUser, tags=['User'])
 def create_user(request: schemas.User, db: Session = Depends(get_db)):
     """ View that provides new user creation """
 
@@ -105,10 +105,23 @@ def create_user(request: schemas.User, db: Session = Depends(get_db)):
     return new_user
 
 
-@app.get('/user/list', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowUser])
+@app.get('/user/list', status_code=status.HTTP_200_OK, response_model=List[schemas.ShowUser], tags=['User'])
 def users(db: Session = Depends(get_db)):
     """ View that lists all Users """
 
     all_users = db.query(models.User).all()
 
     return all_users
+
+
+@app.get('/user/{id}', status_code=status.HTTP_200_OK, response_model=schemas.ShowUser, tags=['User'])
+def get_user(id: int, db: Session = Depends(get_db)):
+    """ View that lists all Users """
+
+    user = db.query(models.User).filter(models.User.id == id).first()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'User with the id {id} not found')
+
+    return user
